@@ -3414,7 +3414,7 @@ DNS-over-HTTPS with IP:
                 if (!empty($v['# PublicKey'])) {
                     $conf['peers'][$k]['online'] = 'off';
                 } else {
-                    $conf['peers'][$k]['status'] = $status ? $this->getStatusPeer($v['PublicKey'], $status['peers']) : 'error';
+                    $conf['peers'][$k]['status'] = $status ? $this->getStatusPeer($v['PublicKey'], $status['peers'] ?? []) : ['latest handshake' => 'never', 'transfer' => '0 B received, 0 B sent'];
                     $conf['peers'][$k]['online'] = preg_match('~^(\d+ seconds|[12] minute)~', $conf['peers'][$k]['status']['latest handshake']) ? 'online' : '';
                 }
             }
@@ -9257,13 +9257,18 @@ DNS-over-HTTPS with IP:
         $this->menu('config');
     }
 
-    public function getStatusPeer(string $publickey, array $peers)
+    public function getStatusPeer(string $publickey, ?array $peers)
     {
-        foreach ($peers as $k => $v) {
-            if ($v['peer'] == $publickey) {
+        foreach (($peers ?: []) as $k => $v) {
+            if (($v['peer'] ?? null) == $publickey) {
                 return $v;
             }
         }
+
+        return [
+            'latest handshake' => 'never',
+            'transfer' => '0 B received, 0 B sent',
+        ];
     }
 
     public function getInstanceWG($k = false)
